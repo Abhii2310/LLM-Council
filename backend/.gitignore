@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+llm_council.db
+.pytest_cache/
