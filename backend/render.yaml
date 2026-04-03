@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: llm-council-api
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.13
+      - key: BACKEND_CORS_ORIGINS
+        value: "*"
+      - key: GEMINI_ENABLED
+        value: "true"
+      # The below will need to be entered securely in Render's dashboard
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
