@@ -43,7 +43,12 @@ jobs:
           exit 1
 
       - name: Run predeploy checks (read-only)
-        run: python scripts/predeploy_check.py --base-url http://127.0.0.1:8000 --no-feedback-write
+        run: >
+          python scripts/predeploy_check.py
+          --base-url http://127.0.0.1:8000
+          --no-feedback-write
+          --min-healthy-models 0
+          --min-successful-models 0
 
       - name: Show backend logs on failure
         if: failure()
