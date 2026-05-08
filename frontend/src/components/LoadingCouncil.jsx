@@ -5,7 +5,7 @@ import { Brain, Cpu, Zap, Sparkles, Scale } from "lucide-react";
 const COUNCIL_MEMBERS = [
   { key: "llama3_70b",   name: "Llama 3.3 70B",     provider: "Groq",      icon: Brain,    color: "from-violet-500 to-purple-600",  duration: 2.5 },
   { key: "llama4_scout", name: "Llama 4 Scout 17B",  provider: "Groq",      icon: Zap,      color: "from-blue-500 to-cyan-500",      duration: 3.0 },
-  { key: "kimi_k2",      name: "Kimi K2",            provider: "Groq",      icon: Sparkles, color: "from-pink-500 to-rose-500",      duration: 3.5 },
+  { key: "kimi_k2",      name: "Kimi K2",            provider: "OpenRouter", icon: Sparkles, color: "from-pink-500 to-rose-500",      duration: 3.5 },
   { key: "llama3_8b",    name: "Llama 3.1 8B",       provider: "Groq",      icon: Cpu,      color: "from-emerald-500 to-green-500",  duration: 2.0 },
   { key: "gemini",       name: "Gemini 2.5 Flash",   provider: "Google AI", icon: Scale,    color: "from-amber-500 to-orange-500",   duration: 3.0 },
 ];
@@ -28,7 +28,7 @@ export default function LoadingCouncil({ elapsed }) {
       { at: 1,  msg: "Models generating responses in parallel…" },
       { at: 4,  msg: "Scoring with 5 evaluation metrics…" },
       { at: 7,  msg: "Selecting best response…" },
-      { at: 9,  msg: "Finalising Gemini validation…" },
+      { at: 9,  msg: "Finalising unbiased cross-validator decision…" },
       { at: 12, msg: "Almost done — compiling results…" },
     ];
     const timers = msgs.map(({ at, msg }) =>
@@ -141,7 +141,7 @@ export default function LoadingCouncil({ elapsed }) {
         animate={{ opacity: [0.3, 0.7, 0.3] }}
         transition={{ duration: 2.5, repeat: Infinity }}
       >
-        <span>4 models + Gemini running in parallel</span>
+        <span>4 models + Gemini + ChatGPT scored with same formula</span>
         <span className="flex gap-0.5">
           {[0, 0.25, 0.5].map((d) => (
             <motion.span

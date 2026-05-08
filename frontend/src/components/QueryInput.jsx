@@ -5,14 +5,28 @@ import { Send, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 
-export default function QueryInput({ onSubmit, loading }) {
-  const [value, setValue] = useState("");
+export default function QueryInput({ onSubmit, loading, value: controlledValue, onValueChange }) {
+  const [internalValue, setInternalValue] = useState("");
+  const isControlled = typeof controlledValue === "string";
+  const value = isControlled ? controlledValue : internalValue;
+
+  const setValue = (next) => {
+    if (!isControlled) setInternalValue(next);
+    if (typeof onValueChange === "function") onValueChange(next);
+  };
 
   const disabled = useMemo(() => loading || !value.trim(), [loading, value]);
 
+  const runSubmit = () => {
+    const trimmed = value.trim();
+    if (!trimmed || loading) return;
+    onSubmit(trimmed);
+    setValue("");
+  };
+
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && !disabled) {
-      onSubmit(value.trim());
+      runSubmit();
     }
   };
 
@@ -49,7 +63,7 @@ export default function QueryInput({ onSubmit, loading }) {
             <Button
               variant="primary"
               disabled={disabled}
-              onClick={() => onSubmit(value.trim())}
+              onClick={runSubmit}
               className="w-full gap-2"
             >
               {loading ? (

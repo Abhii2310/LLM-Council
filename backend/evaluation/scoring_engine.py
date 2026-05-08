@@ -37,6 +37,29 @@ def select_best_response(
     metrics: List[Dict[str, object]],
     scores: List[Dict[str, object]],
 ) -> Tuple[Dict[str, object], Dict[str, object], Dict[str, object]]:
+    def _metric_for(model_key: str) -> Dict[str, float]:
+        m = metric_map.get(model_key, {})
+        return {
+            "relevance": float(m.get("relevance", 0.0)),
+            "semantic_similarity": float(m.get("semantic_similarity", 0.0)),
+            "agreement": float(m.get("agreement", 0.0)),
+            "clarity": float(m.get("clarity", 0.0)),
+            "length_optimization": float(m.get("length_optimization", 0.0)),
+        }
+
+    def _candidate_key(row: Dict[str, object]) -> Tuple[float, float, float, float, float, float, str]:
+        model_key = str(row.get("model", ""))
+        metric = _metric_for(model_key)
+        return (
+            float(score_map.get(model_key, {}).get("final_score", 0.0)),
+            metric["relevance"],
+            metric["clarity"],
+            metric["semantic_similarity"],
+            metric["agreement"],
+            metric["length_optimization"],
+            str(row.get("response", "")).strip().lower(),
+        )
+
     score_map = {str(s["model"]): s for s in scores}
     metric_map = {str(m["model"]): m for m in metrics}
 
@@ -60,6 +83,6 @@ def select_best_response(
             score_map.get(model, {"model": model, "final_score": 0.0}),
         )
 
-    best = max(valid, key=lambda r: score_map[str(r["model"])]["final_score"])
+    best = max(valid, key=_candidate_key)
     model_key = str(best["model"])
     return best, metric_map[model_key], score_map[model_key]

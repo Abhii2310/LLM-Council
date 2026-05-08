@@ -30,6 +30,12 @@ _QUOTA_EXHAUSTED_AT: Dict[str, float] = {}
 _QUOTA_COOLDOWN_SECONDS = 3600  # skip an exhausted model for 1 hour
 
 
+def _validator_timeout_seconds() -> float:
+    request_timeout = float(settings.request_timeout_seconds)
+    soft_timeout = float(settings.per_model_soft_timeout_seconds)
+    return max(3.0, min(request_timeout, soft_timeout))
+
+
 def _is_quota_exhausted(model: str) -> bool:
     ts = _QUOTA_EXHAUSTED_AT.get(model)
     if ts is None:
@@ -89,7 +95,7 @@ async def _call_gemini_model(
 async def _call_groq_fallback(query: str) -> str:
     """Use Groq Llama 3.3 70B when all Gemini models are quota-exhausted."""
     if not settings.groq_api_key:
-        return "⚠️ Gemini quota exhausted and no Groq key available for fallback."
+        return "Gemini validator temporarily unavailable."
 
     url = "https://api.groq.com/openai/v1/chat/completions"
     headers = {
@@ -105,12 +111,17 @@ async def _call_groq_fallback(query: str) -> str:
         "temperature": 0.6,
         "max_tokens": 1024,
     }
-    async with httpx.AsyncClient(timeout=settings.request_timeout_seconds) as client:
-        resp = await client.post(url, json=payload, headers=headers)
-        resp.raise_for_status()
-        data = resp.json()
-        content = (data.get("choices") or [{}])[0].get("message", {}).get("content", "")
-        return content
+    try:
+        async with httpx.AsyncClient(timeout=_validator_timeout_seconds()) as client:
+            resp = await client.post(url, json=payload, headers=headers)
+            if resp.status_code == 429:
+                return "Gemini validator temporarily unavailable."
+            resp.raise_for_status()
+            data = resp.json()
+            content = (data.get("choices") or [{}])[0].get("message", {}).get("content", "")
+            return str(content or "").strip() or "Gemini validator temporarily unavailable."
+    except Exception:
+        return "Gemini validator temporarily unavailable."
 
 
 # ─── Public: generate response ────────────────────────────────────────────
@@ -127,7 +138,7 @@ async def get_gemini_response(query: str) -> str:
         return "Gemini API key not configured."
 
     try:
-        async with httpx.AsyncClient(timeout=settings.request_timeout_seconds) as client:
+        async with httpx.AsyncClient(timeout=_validator_timeout_seconds()) as client:
             for model in _GEMINI_MODELS:
                 if _is_quota_exhausted(model):
                     continue  # skip without making an API call
@@ -139,7 +150,7 @@ async def get_gemini_response(query: str) -> str:
                     # None = quota/404 — try next
                 except httpx.HTTPStatusError as e:
                     if e.response.status_code == 403:
-                        return "⚠️ Gemini API key invalid or unauthorised."
+                        return "Gemini validator temporarily unavailable."
                     continue
                 except Exception:
                     continue
@@ -147,8 +158,8 @@ async def get_gemini_response(query: str) -> str:
         # All Gemini models exhausted — use Groq
         return await _call_groq_fallback(query)
 
-    except Exception as e:
-        return f"Gemini error: {e}"
+    except Exception:
+        return "Gemini validator temporarily unavailable."
 
 
 # ─── Public: quota status check (used by /gemini/status endpoint) ─────────

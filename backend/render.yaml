@@ -8,7 +8,7 @@ services:
       - key: PYTHON_VERSION
         value: 3.9.13
       - key: BACKEND_CORS_ORIGINS
-        value: "*"
+        value: "https://your-frontend-domain.vercel.app"
       - key: GEMINI_ENABLED
         value: "true"
       # The below will need to be entered securely in Render's dashboard

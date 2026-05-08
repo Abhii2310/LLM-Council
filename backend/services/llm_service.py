@@ -10,8 +10,21 @@ _COUNCIL_SYSTEM_PROMPT = (
     "Provide clear, well-structured, and thorough answers. "
     "Use paragraphs or bullet points as appropriate. "
     "Be informative and direct — avoid filler phrases, repetition, or unnecessary disclaimers. "
-    "Always complete your final sentence."
+    "Always complete your final sentence. "
+    "Do not invent facts. If a factual detail is uncertain or not present in given context, "
+    "state that clearly and ask for a reliable source or more details."
 )
+
+
+def _build_user_message(prompt: str) -> str:
+    return (
+        "User query:\n"
+        f"{prompt}\n\n"
+        "Grounding rules:\n"
+        "- Use the provided prompt context as primary grounding.\n"
+        "- If factual detail is uncertain or missing, say so clearly instead of guessing.\n"
+        "- Keep the response relevant to the latest user query and its session context."
+    )
 
 
 async def generate_completion(
@@ -26,7 +39,7 @@ async def generate_completion(
         model=model,
         messages=[
             {"role": "system", "content": _COUNCIL_SYSTEM_PROMPT},
-            {"role": "user", "content": prompt},
+            {"role": "user", "content": _build_user_message(prompt)},
         ],
         temperature=temperature,
         max_tokens=max_tokens,

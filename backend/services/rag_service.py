@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 import re
+import time
 from collections import Counter
 from pathlib import Path
 from typing import Dict, List, Tuple
@@ -10,10 +11,17 @@ from utils.config import settings
 
 ALLOWED_EXTENSIONS = {".txt", ".md", ".markdown"}
 _TOKEN_RE = re.compile(r"[a-zA-Z0-9]+")
+_STOPWORDS = {
+    "a", "an", "and", "are", "as", "at", "be", "by", "for", "from", "has", "have",
+    "how", "i", "if", "in", "into", "is", "it", "me", "my", "of", "on", "or", "our",
+    "should", "that", "the", "their", "them", "there", "these", "they", "this", "to",
+    "us", "was", "we", "what", "when", "where", "which", "who", "why", "with", "you", "your",
+}
 
 
 def _tokenize(text: str) -> List[str]:
-    return _TOKEN_RE.findall((text or "").lower())
+    tokens = _TOKEN_RE.findall((text or "").lower())
+    return [t for t in tokens if len(t) > 2 and t not in _STOPWORDS]
 
 
 def _chunk_text(text: str, chunk_size: int, overlap: int) -> List[str]:
@@ -139,6 +147,7 @@ class LocalRAGIndex:
 
 _CACHE_SIGNATURE: str = ""
 _CACHE_INDEX: LocalRAGIndex = LocalRAGIndex()
+_LAST_SIGNATURE_CHECK_AT: float = 0.0
 
 
 def _docs_signature(docs_root: Path) -> str:
@@ -158,9 +167,17 @@ def get_rag_context(query: str) -> Dict[str, object]:
         return {"enabled": False, "context": "", "sources": []}
 
     docs_root = Path(settings.rag_docs_path)
-    signature = _docs_signature(docs_root)
+    refresh_s = max(1, int(settings.rag_signature_refresh_seconds))
 
-    global _CACHE_SIGNATURE, _CACHE_INDEX
+    global _CACHE_SIGNATURE, _CACHE_INDEX, _LAST_SIGNATURE_CHECK_AT
+    now = time.time()
+    should_check_signature = (_CACHE_SIGNATURE == "") or ((now - _LAST_SIGNATURE_CHECK_AT) >= refresh_s)
+
+    signature = _CACHE_SIGNATURE
+    if should_check_signature:
+        signature = _docs_signature(docs_root)
+        _LAST_SIGNATURE_CHECK_AT = now
+
     if signature != _CACHE_SIGNATURE:
         index = LocalRAGIndex()
         index.build(

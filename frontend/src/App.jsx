@@ -9,7 +9,7 @@ export default function App() {
     <Router>
       <div className="relative min-h-screen">
         {/* Spiral animation background — fixed behind everything */}
-        <div className="fixed inset-0 z-0 opacity-50">
+        <div className="fixed inset-0 z-0 opacity-30">
           <SpiralAnimation />
         </div>
 

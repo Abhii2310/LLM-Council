@@ -15,7 +15,7 @@ function mergeMetricsAndScores(metrics = [], scores = []) {
   }));
 }
 
-export default function MetricsDashboard({ metrics, scores }) {
+export default function MetricsDashboard({ metrics, scores, title = "Metrics Dashboard", subtitle = "Final weighted score per model (0-1)" }) {
   const data = mergeMetricsAndScores(metrics, scores);
   if (!data.length) return null;
 
@@ -30,8 +30,8 @@ export default function MetricsDashboard({ metrics, scores }) {
           <BarChart3 className="h-4 w-4 text-white" />
         </div>
         <div>
-          <h3 className="text-sm font-semibold">Metrics Dashboard</h3>
-          <p className="text-[11px] text-white/45">Final weighted score per model (0-1)</p>
+          <h3 className="text-sm font-semibold">{title}</h3>
+          <p className="text-[11px] text-white/45">{subtitle}</p>
         </div>
       </div>
 

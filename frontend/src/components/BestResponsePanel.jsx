@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Crown, Sparkles, Brain, Cpu, Scale, Microscope } from "lucide-react";
+import { Crown, Sparkles, Brain, Cpu, Scale, Microscope, ThumbsUp, ThumbsDown } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -8,9 +8,27 @@ const MODEL_DISPLAY = {
   llama3_70b: { name: "Llama 3.3 70B", icon: Cpu, color: "from-blue-500 to-cyan-500" },
   qwen_32b: { name: "Qwen 3 32B", icon: Scale, color: "from-orange-500 to-amber-500" },
   llama4_scout: { name: "Llama 4 Scout 17B", icon: Microscope, color: "from-emerald-500 to-green-500" },
+  deepseek_chat: { name: "DeepSeek Chat", icon: Brain, color: "from-cyan-500 to-sky-500" },
+  cohere_command_r: { name: "Cohere Command R", icon: Scale, color: "from-amber-500 to-yellow-500" },
+  cerebras_llama3_70b: { name: "Cerebras Llama 3.1 70B", icon: Cpu, color: "from-indigo-500 to-blue-500" },
+  sambanova_qwen: { name: "SambaNova Qwen 2.5 72B", icon: Scale, color: "from-fuchsia-500 to-pink-500" },
+  nvidia_llama: { name: "NVIDIA Llama 3.1 Nemotron 70B", icon: Cpu, color: "from-green-500 to-emerald-500" },
+  together_qwen: { name: "Together Qwen 2.5 72B", icon: Scale, color: "from-rose-500 to-orange-500" },
+  aimlapi_mistral: { name: "AI/ML API Mistral Small", icon: Brain, color: "from-sky-500 to-blue-600" },
+  kimi_k2: { name: "Kimi K2", icon: Scale, color: "from-orange-500 to-amber-500" },
+  ollama_local: { name: "Ollama Local", icon: Brain, color: "from-slate-500 to-zinc-600" },
 };
 
-export default function BestResponsePanel({ bestModel, bestResponse, reason, score }) {
+export default function BestResponsePanel({
+  bestModel,
+  bestResponse,
+  reason,
+  score,
+  onThumbsUp,
+  onThumbsDown,
+  feedbackState = "idle",
+  displayTitle = "🏆 Best Response Selected",
+}) {
   if (!bestModel) return null;
 
   const modelInfo = MODEL_DISPLAY[bestModel] || { name: bestModel, icon: Crown, color: "from-emerald-400 to-teal-500" };
@@ -28,7 +46,7 @@ export default function BestResponsePanel({ bestModel, bestResponse, reason, sco
             <ModelIcon className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-emerald-200">🏆 Best Response Selected</h3>
+            <h3 className="text-sm font-semibold text-emerald-200">{displayTitle}</h3>
             <p className="text-[11px] text-emerald-200/60">Top model by weighted multi-metric scoring</p>
           </div>
         </div>
@@ -47,6 +65,30 @@ export default function BestResponsePanel({ bestModel, bestResponse, reason, sco
           <ReactMarkdown remarkPlugins={[remarkGfm]}>
             {bestResponse || "No best response generated."}
           </ReactMarkdown>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={onThumbsUp}
+            disabled={feedbackState === "sending" || feedbackState === "sent_up"}
+            className="inline-flex items-center gap-1.5 rounded-md border border-emerald-400/25 bg-emerald-500/10 px-3 py-1.5 text-xs text-emerald-200 hover:bg-emerald-500/15 disabled:opacity-50"
+          >
+            <ThumbsUp className="h-3.5 w-3.5" /> Helpful
+          </button>
+          <button
+            type="button"
+            onClick={onThumbsDown}
+            disabled={feedbackState === "sending" || feedbackState === "sent_down"}
+            className="inline-flex items-center gap-1.5 rounded-md border border-amber-400/25 bg-amber-500/10 px-3 py-1.5 text-xs text-amber-200 hover:bg-amber-500/15 disabled:opacity-50"
+          >
+            <ThumbsDown className="h-3.5 w-3.5" /> Show alternate
+          </button>
+          <span className="text-[11px] text-white/55">
+            {feedbackState === "sending" ? "Saving feedback..." : ""}
+            {feedbackState === "sent_up" ? "Thanks — feedback recorded." : ""}
+            {feedbackState === "sent_down" ? "Loaded the next-best answer and recorded feedback." : ""}
+            {feedbackState === "error" ? "Feedback save failed, but your answer view is updated." : ""}
+          </span>
         </div>
         <div className="flex gap-2 rounded-lg border border-indigo-500/20 bg-indigo-500/[0.06] p-3 text-xs text-indigo-200/85">
           <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0" />

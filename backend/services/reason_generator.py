@@ -27,6 +27,8 @@ def generate_reason(metrics: Dict[str, float], model_name: str) -> str:
 
     joined = ", ".join(strengths[:-1]) + (" and " + strengths[-1] if len(strengths) > 1 else strengths[0])
     return (
-        f"{model_name} was selected because it achieved {joined}, "
-        "making it the most reliable council output by the multi-metric scoring formula."
+        f"{model_name} was selected because it achieved {joined}. "
+        f"Metric snapshot: relevance={rel:.3f}, semantic_similarity={sem:.3f}, "
+        f"agreement={agr:.3f}, clarity={clr:.3f}, length_optimization={lng:.3f}. "
+        "Selection is model-agnostic and based only on the configured multi-metric scoring formula."
     )

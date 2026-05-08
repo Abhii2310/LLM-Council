@@ -67,6 +67,39 @@ const VERIDICT_MODELS = [
     strengths: "Alternative framing and broader exploration of solution paths.",
     icon: Microscope,
   },
+  {
+    key: "cerebras-llama3-70b",
+    name: "Cerebras Llama 3.1 70B",
+    provider: "Cerebras",
+    role: "High-throughput Reasoning",
+    strengths: "Strong long-form responses with throughput-oriented serving.",
+    icon: Cpu,
+  },
+  {
+    key: "nvidia-nemotron-70b",
+    name: "NVIDIA Nemotron 70B",
+    provider: "NVIDIA",
+    role: "Instruction Stability",
+    strengths: "Consistent instruction following for enterprise-style prompts.",
+    icon: Scale,
+  },
+  {
+    key: "aimlapi-mistral",
+    name: "AI/ML API Mistral",
+    provider: "AI/ML API",
+    role: "Balanced Utility",
+    strengths: "Balanced utility and response quality across mixed workloads.",
+    icon: Brain,
+  },
+];
+
+const COMING_SOON_MODELS = [
+  "Kimi K2",
+  "DeepSeek Chat",
+  "Cohere Command R",
+  "SambaNova Qwen",
+  "Together Qwen",
+  "Ollama Local",
 ];
 
 export function HeroSectionOne() {
@@ -137,7 +170,7 @@ export function HeroSectionOne() {
                   <div className="mx-auto mb-5 flex w-fit flex-wrap items-center justify-center gap-2 rounded-full border border-white/15 bg-black/35 px-4 py-2 text-[11px] text-white/75 backdrop-blur-md">
                     <span className="inline-flex items-center gap-1"><ShieldCheck className="h-3.5 w-3.5 text-emerald-300" /> Production-grade evaluation</span>
                     <span className="h-3 w-px bg-white/20" />
-                    <span className="inline-flex items-center gap-1"><Layers3 className="h-3.5 w-3.5 text-indigo-300" /> 4-model consensus engine</span>
+                    <span className="inline-flex items-center gap-1"><Layers3 className="h-3.5 w-3.5 text-indigo-300" /> 6 active council models</span>
                     <span className="h-3 w-px bg-white/20" />
                     <span className="inline-flex items-center gap-1"><Sparkles className="h-3.5 w-3.5 text-fuchsia-300" /> Gemini validation lane</span>
                   </div>
@@ -223,7 +256,7 @@ export function HeroSectionOne() {
 
             <div className="mx-auto mt-12 grid max-w-4xl grid-cols-1 gap-4 transition-all duration-500 group-hover:opacity-60 md:grid-cols-3">
               {[
-                { t: "Parallel Model Panel", d: "4 specialized VeriDict models generate diverse reasoning paths." },
+                { t: "Parallel Model Panel", d: "6 active council models generate diverse reasoning paths." },
                 { t: "5-Metric Scoring", d: "Relevance, Agreement, Clarity, Similarity, Length optimization." },
                 { t: "Transparent Selection", d: "Best output chosen with explainable weighted confidence." },
               ].map((item) => (
@@ -275,13 +308,20 @@ export function HeroSectionOne() {
               <div>
                 <h2 className="text-3xl md:text-4xl font-semibold">LLMs used in VeriDict AI</h2>
                 <p className="mt-3 max-w-3xl text-white/70">
-                  VeriDict AI runs these models in parallel for each query, then applies weighted evaluation metrics.
-                  We also run a Gemini validation track for side-by-side confidence checking.
+                  VeriDict AI currently runs these active models in parallel for each query, then applies weighted evaluation metrics.
+                  Additional providers are being integrated and will move from Coming Soon to Active as each lane is validated.
                 </p>
               </div>
               <div className="inline-flex items-center gap-2 rounded-full border border-indigo-400/30 bg-indigo-500/10 px-3 py-1 text-xs text-indigo-200">
                 <Sparkles className="h-3.5 w-3.5" /> Gemini 2.0 Flash validation enabled
               </div>
+            </div>
+
+            <div className="mt-5 rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-xs text-emerald-100">
+              Active now: {VERIDICT_MODELS.map((m) => m.name).join(" • ")}
+            </div>
+            <div className="mt-2 rounded-xl border border-amber-400/20 bg-amber-500/10 px-4 py-3 text-xs text-amber-100">
+              Coming soon: {COMING_SOON_MODELS.join(" • ")}
             </div>
 
             <div className="mt-8 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
