@@ -1,0 +1,108 @@
+name: Production Gate
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  production-readiness:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+      CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
+      AIMLAPI_API_KEY: ${{ secrets.AIMLAPI_API_KEY }}
+      BACKEND_CORS_ORIGINS: https://example.vercel.app
+      QUANTUM_OPTIMIZATION_MODE: assist
+      QUANTUM_OPTIMIZATION_STRENGTH: "0.08"
+      QUANTUM_OPTIMIZATION_SEED: "23"
+      RAG_ENABLED: "true"
+      RAG_DOCS_PATH: knowledge_base
+      REQUEST_TIMEOUT_SECONDS: "45"
+      PER_MODEL_SOFT_TIMEOUT_SECONDS: "12"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install backend dependencies
+        run: pip install -r requirements.txt
+
+      - name: Validate required secrets are configured
+        run: |
+          missing=0
+          for key in GROQ_API_KEY GEMINI_API_KEY OPENROUTER_API_KEY; do
+            if [ -z "${!key}" ]; then
+              echo "::error title=Missing secret::$key is not configured in GitHub repo secrets"
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            echo "Required production secrets are missing."
+            exit 1
+          fi
+
+      - name: Start backend
+        run: |
+          nohup uvicorn main:app --host 127.0.0.1 --port 8000 > /tmp/backend.log 2>&1 &
+          echo $! > /tmp/backend.pid
+
+      - name: Wait for backend readiness
+        run: |
+          for i in {1..45}; do
+            if curl -fsS http://127.0.0.1:8000/quantum/status >/dev/null; then
+              echo "Backend is ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Backend failed to start"
+          cat /tmp/backend.log || true
+          exit 1
+
+      - name: Run strict predeploy checks
+        run: |
+          python scripts/predeploy_check.py \
+            --base-url http://127.0.0.1:8000 \
+            --no-feedback-write \
+            --min-healthy-models 6 \
+            --min-successful-models 6
+
+      - name: Show backend logs on failure
+        if: failure()
+        run: cat /tmp/backend.log || true
+
+  frontend-production-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build
