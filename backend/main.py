@@ -37,6 +37,21 @@ async def add_security_headers(request: Request, call_next):
 app.include_router(query_router)
 
 
+@app.get("/")
+async def root_status() -> dict[str, str]:
+    return {
+        "service": "LLM Council API",
+        "status": "ok",
+        "docs": "/docs",
+        "health": "/health",
+    }
+
+
+@app.get("/health")
+async def health_status() -> dict[str, str]:
+    return {"status": "healthy"}
+
+
 def _prewarm_sentence_model() -> None:
     """
     Load and run one dummy inference on the sentence-transformer model.
